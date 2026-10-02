@@ -1,0 +1,2 @@
+ALTER TABLE "Device"
+ADD COLUMN "lastSeenAt" TIMESTAMP(3);

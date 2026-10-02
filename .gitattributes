@@ -1,0 +1,9 @@
+# Preserve LF in repository text files across developer platforms.
+* text=auto eol=lf
+
+# Binary assets must not be line-ending normalized.
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.svg text eol=lf

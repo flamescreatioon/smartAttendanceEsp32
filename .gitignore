@@ -1,0 +1,29 @@
+# Environment files and credentials
+.env
+.env.*
+!.env.example
+SmartAttendanceESP32/secrets.h
+
+# Dependencies and generated builds
+**/node_modules/
+**/dist/
+**/coverage/
+
+# Local databases and runtime logs
+*.log
+*.sqlite
+*.sqlite-journal
+attendanceBackend/.local-postgres/
+
+# Arduino and PlatformIO build output
+**/.pio/
+**/build/
+*.elf
+*.bin
+
+# Editor and operating-system files
+.vscode/*
+!.vscode/extensions.json
+.idea/
+.DS_Store
+Thumbs.db

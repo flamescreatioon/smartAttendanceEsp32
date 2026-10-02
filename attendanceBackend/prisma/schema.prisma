@@ -1,0 +1,146 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum DeviceStatus {
+  ACTIVE
+  INACTIVE
+}
+
+enum UserRole {
+  ADMIN
+  LECTURER
+}
+
+enum SessionStatus {
+  ACTIVE
+  ENDED
+  EXPIRED
+}
+
+enum OtpStatus {
+  PENDING
+  VERIFIED
+  EXPIRED
+}
+
+enum AttendanceStatus {
+  PENDING
+  VERIFIED
+  REJECTED
+}
+
+model Device {
+  id          String    @id @default(uuid())
+  deviceId    String    @unique
+  name        String?
+  location    String?
+  apiKey      String    @unique
+  status      DeviceStatus @default(ACTIVE)
+  lastSeenAt  DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  sessions    Session[]
+  users       User[]
+}
+
+model User {
+  id            String    @id @default(uuid())
+  email         String    @unique
+  passwordHash  String
+  fullName      String
+  role          UserRole  @default(LECTURER)
+  deviceId      String?
+  device        Device?   @relation(fields: [deviceId], references: [id], onDelete: SetNull)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+}
+
+model Session {
+  id            String        @id @default(uuid())
+  deviceId      String
+  device        Device        @relation(fields: [deviceId], references: [id], onDelete: Restrict)
+  courseId      String?
+  course        Course?       @relation(fields: [courseId], references: [id], onDelete: SetNull)
+  courseCode    String?
+  courseTitle   String?
+  lecturerId    String?
+  token         String        @unique
+  status        SessionStatus @default(ACTIVE)
+  startedAt     DateTime      @default(now())
+  expiresAt     DateTime
+  endedAt       DateTime?
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+  attendances   AttendanceRecord[]
+}
+
+model Course {
+  id            String             @id @default(uuid())
+  code          String             @unique
+  title         String?
+  lecturerId    String?
+  createdAt     DateTime           @default(now())
+  updatedAt     DateTime           @updatedAt
+  sessions      Session[]
+  enrollments   CourseEnrollment[]
+}
+
+model Student {
+  id            String             @id @default(uuid())
+  matricNumber  String             @unique
+  firstName     String
+  lastName      String
+  department    String?
+  email         String
+  phoneNumber   String?
+  createdAt     DateTime           @default(now())
+  updatedAt     DateTime           @updatedAt
+  attendances   AttendanceRecord[]
+  enrollments   CourseEnrollment[]
+}
+
+model CourseEnrollment {
+  id          String    @id @default(uuid())
+  courseId    String
+  studentId   String
+  course      Course    @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  student     Student   @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  createdAt   DateTime  @default(now())
+
+  @@unique([courseId, studentId])
+  @@index([studentId])
+}
+
+model AttendanceRecord {
+  id                String           @id @default(uuid())
+  sessionId         String
+  session           Session          @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  studentId         String?
+  student           Student?         @relation(fields: [studentId], references: [id], onDelete: SetNull)
+  firstName         String?
+  lastName          String?
+  fullName          String
+  matricNumber      String
+  department        String?
+  email             String
+  phoneNumber       String?
+  otpCodeHash       String?
+  otpRequestedAt    DateTime?
+  otpExpiresAt      DateTime?
+  otpAttemptCount   Int              @default(0)
+  otpStatus         OtpStatus        @default(PENDING)
+  attendanceStatus  AttendanceStatus @default(PENDING)
+  verifiedAt        DateTime?
+  createdAt         DateTime         @default(now())
+  updatedAt         DateTime         @updatedAt
+
+  @@unique([sessionId, matricNumber])
+  @@index([sessionId, updatedAt])
+  @@index([studentId])
+}
